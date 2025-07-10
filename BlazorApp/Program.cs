@@ -1,31 +1,44 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using BlazorApp.Data;
+using BlazorApp.Hubs;          // ← add
+using BlazorApp.Services;      // ← add
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ─────────────────────────────────────────────────────────────
+// 1.  Register framework services
+// ─────────────────────────────────────────────────────────────
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 
+// ─────────────────────────────────────────────────────────────
+// 2.  Add realtime + simulator services
+// ─────────────────────────────────────────────────────────────
+builder.Services.AddSignalR();                 // SignalR
+builder.Services.AddHostedService<EkgSimulator>();  // background fake-EKG publisher
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ─────────────────────────────────────────────────────────────
+// 3.  HTTP pipeline
+// ─────────────────────────────────────────────────────────────
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-
 app.UseRouting();
 
-app.MapBlazorHub();
+// ─────────────────────────────────────────────────────────────
+// 4.  Endpoint mapping
+// ─────────────────────────────────────────────────────────────
+app.MapBlazorHub();                    // Blazor Server
+app.MapHub<EkgHub>("/ekgHub");         // ← SignalR hub endpoint
 app.MapFallbackToPage("/_Host");
 
 app.Run();

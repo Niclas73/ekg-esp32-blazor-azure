@@ -1,0 +1,16 @@
+@page "/ekg"
+@inject IJSRuntime JS
+
+<h3 class="mb-3">Live EKG Monitor (simulated)</h3>
+
+<canvas id="ekgChart" width="800" height="200"></canvas>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("startEkgChart");
+        }
+    }
+}
