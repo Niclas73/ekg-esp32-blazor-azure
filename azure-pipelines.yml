@@ -8,7 +8,7 @@ pr: none
 
 variables:
   buildConfiguration: 'Release'
-  webAppName: 'ekgFreePlan'   # ← Ditt App Service-namn
+  webAppName: 'ekg-blazor-ni73'   # ← Ditt App Service-namn
 
 stages:
 # Build Stage
