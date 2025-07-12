@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────
+# release.yml  – deploy artifact to Azure App Service
+# Triggered by successful build of main branch.
+# ─────────────────────────────────────────────────────────────
+name: DeployToAzure
+trigger: none
+
+resources:
+  pipelines:
+    - pipeline: build   # alias
+      source: CI        # exact name of your build pipeline (azure-pipelines.yml)
+      branch: main
+      trigger:
+        branches: [ main ]
+
+variables:
+  webAppName: 'ekg-blazor-$(System.TeamProject)'
+  resourceGroup: 'ekg-rg'
+
+stages:
+- stage: Deploy
+  jobs:
+  - deployment: WebDeploy
+    environment: production
+    pool:
+      vmImage: 'windows-latest'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: build
+            artifact: drop
+
+          - task: AzureWebApp@1
+            displayName: 'Deploy to App Service'
+            inputs:
+              azureSubscription: 'AzureSPN'   # service connection
+              appType: 'webApp'
+              resourceGroupName: '$(resourceGroup)'
+              appName: '$(webAppName)'
+              package: $(Pipeline.Workspace)/drop/**/*.zip
