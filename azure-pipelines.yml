@@ -1,68 +1,76 @@
+# azure-pipelines.yml
 trigger:
   branches:
     include:
       - main
 
-pool:
-  vmImage: 'windows-latest'
+pr: none
 
 variables:
   buildConfiguration: 'Release'
+  webAppName: 'ekgFreePlan'   # ← Ditt App Service-namn
 
 stages:
-# --- Build stage ---
+# Build Stage
 - stage: Build
-  displayName: Build and Package
+  displayName: Build & Package
   jobs:
   - job: BuildJob
+    displayName: Build
+    pool:
+      vmImage: 'windows-latest'
     steps:
     - task: UseDotNet@2
+      displayName: 'Install .NET 8 SDK'
       inputs:
-        packageType: 'sdk'
+        packageType: sdk
         version: '8.0.x'
 
     - task: DotNetCoreCLI@2
-      displayName: 'Restore packages'
+      displayName: 'Restore'
       inputs:
-        command: 'restore'
+        command: restore
         projects: '**/*.csproj'
 
     - task: DotNetCoreCLI@2
-      displayName: 'Build project'
+      displayName: 'Build'
       inputs:
-        command: 'build'
+        command: build
         projects: '**/*.csproj'
         arguments: '--configuration $(buildConfiguration)'
 
     - task: DotNetCoreCLI@2
-      displayName: 'Publish Blazor Server App'
+      displayName: 'Publish'
       inputs:
-        command: 'publish'
+        command: publish
         publishWebProjects: true
         arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
         zipAfterPublish: true
 
     - task: PublishBuildArtifacts@1
+      displayName: 'Publish artifact (drop)'
       inputs:
         pathToPublish: '$(Build.ArtifactStagingDirectory)'
         artifactName: 'drop'
 
-# --- Deploy stage ---
+# Deploy Stage
 - stage: Deploy
   displayName: Deploy to Azure App Service
   dependsOn: Build
   jobs:
   - deployment: WebDeploy
+    displayName: 'Web Deploy'
     environment: production
     strategy:
       runOnce:
         deploy:
           steps:
           - download: current
+
           - task: AzureWebApp@1
-            displayName: 'Deploy Blazor zip'
+            displayName: 'Deploy Blazor package'
             inputs:
               azureSubscription: 'AzureSPN'
               appType: 'webApp'
-              appName: 'ekg-webapp'  # exakt namn på din App Service
-              package: $(Pipeline.Workspace)/drop/**/*.zip
+              appName: '$(webAppName)'    # ← Använder ekgFreePlan nu
+              package: '$(Pipeline.Workspace)/drop/**/*.zip'
