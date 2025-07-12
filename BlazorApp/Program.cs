@@ -1,29 +1,29 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using BlazorApp.Data;
-using BlazorApp.Hubs;          // ← add
-using BlazorApp.Services;      // ← add
+using BlazorApp.Hubs;
+using BlazorApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─────────────────────────────────────────────────────────────
-// 1.  Register framework services
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// 1.  Framework-tjänster
+// ─────────────────────────────────────────────
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 
-// ─────────────────────────────────────────────────────────────
-// 2.  Add realtime + simulator services
-// ─────────────────────────────────────────────────────────────
-builder.Services.AddSignalR();                 // SignalR
-builder.Services.AddHostedService<EkgSimulator>();  // background fake-EKG publisher
+// ─────────────────────────────────────────────
+// 2.  Realtid + EKG-simulator
+// ─────────────────────────────────────────────
+builder.Services.AddSignalR();                     // SignalR-nav
+builder.Services.AddHostedService<EkgSimulator>(); // vår nya Gauss-baserade EKG-generator
 
 var app = builder.Build();
 
-// ─────────────────────────────────────────────────────────────
-// 3.  HTTP pipeline
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// 3.  HTTP-pipeline
+// ─────────────────────────────────────────────
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -34,11 +34,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-// ─────────────────────────────────────────────────────────────
-// 4.  Endpoint mapping
-// ─────────────────────────────────────────────────────────────
-app.MapBlazorHub();                    // Blazor Server
-app.MapHub<EkgHub>("/ekgHub");         // ← SignalR hub endpoint
+// ─────────────────────────────────────────────
+// 4.  Endpoints
+// ─────────────────────────────────────────────
+app.MapBlazorHub();              // Blazor Server
+app.MapHub<EkgHub>("/ekgHub");   // SignalR-hub
 app.MapFallbackToPage("/_Host");
 
 app.Run();

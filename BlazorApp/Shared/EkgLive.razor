@@ -1,0 +1,51 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+
+<div class="row">
+    <!-- EKG-kurva -->
+    <div class="col-md-9">
+        <canvas id="ekgChart" height="180"></canvas>
+    </div>
+
+    <!-- HR & HRV-siffror -->
+    <div class="col-md-3 d-flex flex-column align-items-start">
+        <DigitDisplay Label="HR"  Value="@_heartRate" Unit="bpm" Color="text-success" />
+        <DigitDisplay Label="HRV" Value="@_hrv"       Unit="ms"  Color="text-info" />
+    </div>
+</div>
+
+@code {
+    private double _heartRate;
+    private double _hrv;
+
+    /* Håller referens till aktiv instans så JS kan uppdatera rätt komponent */
+    private static EkgLive? _instance;
+
+    protected override void OnInitialized()
+    {
+        _instance = this;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("ekgLive.init");
+        }
+    }
+
+    /// <summary>
+    /// Metod som JavaScript anropar för att uppdatera HR/HRV
+    /// </summary>
+    [JSInvokable("EkgMetrics_Update")]
+    public static Task UpdateFromJs(double hr, double hrv)
+    {
+        if (_instance is not null)
+        {
+            _instance._heartRate = hr;
+            _instance._hrv = hrv;
+            _instance.InvokeAsync(_instance.StateHasChanged);
+        }
+        return Task.CompletedTask;
+    }
+}

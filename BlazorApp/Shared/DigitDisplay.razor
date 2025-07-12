@@ -1,0 +1,12 @@
+<div class="mb-3">
+    <span class="fw-bold">@Label:</span>
+    <span class="@Color display-6">@Value</span>
+    <small class="text-muted">@Unit</small>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public double Value { get; set; }
+    [Parameter] public string Unit { get; set; } = "";
+    [Parameter] public string Color { get; set; } = "text-success";
+}
